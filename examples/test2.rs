@@ -1,6 +1,7 @@
 use bevy::math::prelude::*;
+use bevy::pbr::MaterialPlugin;
 use bevy::prelude::*;
-use bevy::render::render_resource::{AsBindGroup, ShaderRef};
+use bevy::render::render_resource::{AsBindGroup, ShaderRef, ShaderType};
 
 const SPRITE_SIZE: f32 = 192.0;
 const SPRITE_COLS: usize = 5;
@@ -29,17 +30,26 @@ struct SkillSpriteSheet {
 }
 
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
-struct SkillMaterial {
+pub struct SkillMaterial {
     #[uniform(0)]
-    frame: Vec4,
+    pub frame: FrameData,
     #[texture(1)]
     #[sampler(2)]
-    texture: Handle<Image>,
+    pub texture: Handle<Image>,
+}
+
+#[derive(ShaderType, Debug, Clone)]
+pub struct FrameData {
+    pub frame: Vec4,
 }
 
 impl Material for SkillMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/skill_material.wgsl".into()
+    }
+
+    fn alpha_mode(&self) -> AlphaMode {
+        AlphaMode::Blend
     }
 }
 
@@ -49,6 +59,7 @@ struct SkillMaterialHandle(Handle<SkillMaterial>);
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_plugins(MaterialPlugin::<SkillMaterial>::default())
         .add_systems(Startup, setup)
         .add_systems(
             Update,
@@ -140,7 +151,9 @@ fn setup(
 
     // Create the skill material
     let skill_material = skill_materials.add(SkillMaterial {
-        frame: Vec4::new(0.0, 0.0, 1.0 / SPRITE_COLS as f32, 1.0 / SPRITE_ROWS as f32),
+        frame: FrameData {
+            frame: Vec4::new(0.0, 0.0, 1.0 / SPRITE_COLS as f32, 1.0 / SPRITE_ROWS as f32),
+        },
         texture: texture_handle,
     });
 
@@ -189,14 +202,14 @@ fn animate_skills(
         for mut skill in query.iter_mut() {
             skill.animation_timer.tick(time.delta());
             if skill.animation_timer.just_finished() {
-                let frame_index = (material.frame.x * SPRITE_COLS as f32) as usize;
+                let frame_index = (material.frame.frame.x * SPRITE_COLS as f32) as usize;
                 let next_frame = (frame_index + 1) % TOTAL_FRAMES;
                 if next_frame == 0 {
-                    material.frame.x = 1.0 / SPRITE_COLS as f32;
-                    material.frame.y = 0.0;
+                    material.frame.frame.x = 1.0 / SPRITE_COLS as f32;
+                    material.frame.frame.y = 0.0;
                 } else {
-                    material.frame.x = (next_frame % SPRITE_COLS) as f32 / SPRITE_COLS as f32;
-                    material.frame.y = (next_frame / SPRITE_COLS) as f32 / SPRITE_ROWS as f32;
+                    material.frame.frame.x = (next_frame % SPRITE_COLS) as f32 / SPRITE_COLS as f32;
+                    material.frame.frame.y = (next_frame / SPRITE_COLS) as f32 / SPRITE_ROWS as f32;
                 }
             }
         }
