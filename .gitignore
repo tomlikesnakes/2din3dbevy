@@ -1,0 +1,47 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# Bevy dynamic libraries
+/debug/
+/release/
+
+# Asset files (except shaders)
+/assets/*
+!/assets/shaders/
+
+# Specific asset files
+water.png
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Operating system files
+Thumbs.db
+
+# Backup files
+*~
+
+# Environment variables
+.env
+
+# Logging files
+*.log
+
+# Build output directories
+/build/
+/dist/
+
+# Dependency directories
+/vendor/
+
+# Bevy specific
+.cargo/config.toml
+
+# Keep shader files
+!/assets/shaders/*.wgsl
